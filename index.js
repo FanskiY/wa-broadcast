@@ -6,7 +6,7 @@ const Downloader = require('./downloader')
 const WebSocket = require('ws')
 const _ = require('lodash')
 const {
-    Client,    
+    Client,
     MessageMedia,
     LocalAuth
 } = require('whatsapp-web.js');
@@ -22,6 +22,10 @@ const client = new Client({
 // This object must include WABrowserId, WASecretBundle, WAToken1 and WAToken2.
 
 client.initialize();
+
+const wss = new WebSocket.Server({
+    port: Config.websocketPort
+})
 
 client.on('qr', (qr) => {
     // NOTE: This event will not be fired if a session is specified.
@@ -53,12 +57,17 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    console.log(msg)
-    if(kurir === undefined) return
-    if (msg.body.startsWith('/')) {
-        // Send a new message to the same chat
-        kurir.chat(msg);
-    }
+    console.log(msg);
+    // if(kurir === undefined) return
+    // if (msg.body.startsWith('/')) {
+    //     // Send a new message to the same chat
+    //     kurir.chat(msg);
+    // }
+    wss.clients.forEach(function each(cli) {
+        if (cli.readyState === WebSocket.OPEN) {
+            cli.send(JSON.stringify(msg));
+        }
+    });
 });
 
 client.on('message_create', (msg) => {
@@ -127,10 +136,6 @@ client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
 });
 
-const wss = new WebSocket.Server({
-    port: Config.websocketPort
-})
-
 wss.on('connection', ws => {
     ws.on('message', async message => {
         //console.log(`Received message => ${message}`)
@@ -139,47 +144,59 @@ wss.on('connection', ws => {
 })
 
 async function handleMessage(e) {
+    let i;
     let obj = JSON.parse(e);
     if (obj.type == 'sendWa') {
         //  let validType = ['text', 'image', 'document', 'location', 'video']
         let numbers = obj.data
         let options = {}
         let tmpAttachment = {}
-        for (var i in numbers) {            
+        for (i in numbers) {
             options = numbers[i].options !== undefined ? numbers[i].options : {}
             if (options.media) {
                 options.media = new MessageMedia(options.media.mimetype, options.media.b64data, options.media.filename)
             }
-            
+
             if (numbers[i].url_public) {
-                filePath = Config.folderDownload +"/"+ numbers[i].url_public.substring(numbers[i].url_public.lastIndexOf('/') + 1);
-                await downloadManager.download(numbers[i].url_public,filePath)
-                        .then(fileInfo => numbers[i].attachment = fileInfo.path)
-                        .catch(err => console.log(err))
+                filePath = Config.folderDownload + "/" + numbers[i].url_public.substring(numbers[i].url_public.lastIndexOf('/') + 1);
+                await downloadManager.download(numbers[i].url_public, filePath)
+                    .then(fileInfo => numbers[i].attachment = fileInfo.path)
+                    .catch(err => console.log(err))
             }
 
             if (numbers[i].attachment !== undefined) {
                 if (numbers[i].attachment) {
                     if (fs.existsSync(numbers[i].attachment)) {
-                        if(tmpAttachment[numbers[i].attachment] == undefined){
+                        if (tmpAttachment[numbers[i].attachment] == undefined) {
                             tmpAttachment[numbers[i].attachment] = MessageMedia.fromFilePath(numbers[i].attachment)
                         }
                         options['media'] = tmpAttachment[numbers[i].attachment]
                     }
-                }                         
+                }
             }
             // jika mimetype tidak ada dalam list mimetypecaption maka kirim dulu captionnya scecara terpisah
-            if(options.media){
-                if(!_.includes(Config.mimetypeCaption,options.media.mimetype)){
-                    if(!_.isEmpty(numbers[i].message)){
+            if (options.media) {
+                if (!_.includes(Config.mimetypeCaption, options.media.mimetype)) {
+                    if (!_.isEmpty(numbers[i].message)) {
                         client.sendMessage(numbers[i].to, numbers[i].message)
                     }
                 }
             }
-            
+
             client.sendMessage(numbers[i].to, numbers[i].message, options)
         }
         tmpAttachment = {}
+    } else if (obj.type === 'checkWa') {
+        let numbers = obj.data
+        client.isRegisteredUser(numbers[0].to).then(rs => {
+                wss.clients.forEach(function each(cli) {
+                    if (cli.readyState === WebSocket.OPEN) {
+                        cli.send(JSON.stringify({result: rs}));
+                    }
+                });
+            }
+        );
+
+
     }
 }
-

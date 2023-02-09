@@ -68,3 +68,10 @@ typings/
 session.json
 
 ws_client_php/vendor
+/.idea/.gitignore
+/.idea/jsLinters/jshint.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
+/.idea/wa-broadcast.iml
