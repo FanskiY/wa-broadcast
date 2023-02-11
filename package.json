@@ -13,7 +13,7 @@
     "lodash": "^4.17.21",
     "node-fetch": "^2.6.1",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.19.3"
+    "whatsapp-web.js": "pedroslopez/whatsapp-web.js#main"
   },
   "keywords": [],
   "author": "ahmad afandi",
