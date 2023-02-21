@@ -29,11 +29,18 @@ const wss = new WebSocket.Server({
 
 client.on('qr', (qr) => {
     // NOTE: This event will not be fired if a session is specified.
-    console.log('QR RECEIVED', qr)
+    console.log('QR RECEIVED', qr);
+    var obj = new Object();
+    obj.type = "qr";
+    obj.qr = qr;
+    wss.clients.forEach(function each(cli) {
+        if (cli.readyState === WebSocket.OPEN) {
+            cli.send(JSON.stringify(obj));
+        }
+    });
     if (Config.puppeteer.headless) {
-        qrcode.generate(qr, {small: true})
+        qrcode.generate(qr, {small: true});
     }
-    
 });
 
 client.on('authenticated', (session) => {
