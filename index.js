@@ -196,7 +196,11 @@ async function handleMessage(e) {
         client.isRegisteredUser(numbers[0].to).then(rs => {
                 wss.clients.forEach(function each(cli) {
                     if (cli.readyState === WebSocket.OPEN) {
-                        cli.send(JSON.stringify({result: rs}));
+                        let result = {}
+                        result[result] = rs["result"]
+                        result["phone"] = numbers[0].to
+                        result["type"] = "checkWa"
+                        cli.send(JSON.stringify({result: result}));
                     }
                 });
             }
