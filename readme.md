@@ -36,3 +36,6 @@ for professional support you can [chat me on +6285733659400](https://wa.me/62857
 ## Lisensi
 
 Lisensi dari wa-broadcast adalah [MIT License](LICENSE) namun proyek yang dibangun menyeseuaikan dengan kebijakan masing-masing
+
+
+"executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
