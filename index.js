@@ -15,7 +15,7 @@ let kurir
 let filePath
 
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: process.env.WADIR ? new LocalAuth({dataPath: process.env.WADIR}) : new LocalAuth(),
     puppeteer: Config.puppeteer
 });
 // You can use an existing session and avoid scanning a QR code by adding a "session" object to the client options.
