@@ -14,6 +14,63 @@ const downloadManager = new Downloader()
 let kurir
 let filePath
 
+
+const redis = require("redis");
+let redisNotReady = true;
+let redisClient = redis.createClient({
+    host: 'redis',
+    // host: '127.0.0.1',
+    port: 6379
+});
+redisClient.on("error", (err) => {
+    console.log("error", err)
+});
+redisClient.on("connect", (err) => {
+    console.log("connect");
+});
+redisClient.on("disconnect", (err) => {
+    console.log("disconnect");
+});
+redisClient.on("ready", (err) => {
+    redisNotReady = false;
+    console.log("ready");
+});
+redisClient.connect();
+
+const start = async function () {
+    let currentId = '0-0';
+    while (true) {
+        try {
+            let response = await redisClient.xRead(
+                {
+                    key: process.env.NAMESPACE + '_' + process.env.QUEUE + '_message',
+                    id: currentId
+                }, {
+                    // Read 1 entry at a time, block for 5 seconds if there are none.
+                    COUNT: 1,
+                    BLOCK: 3000
+                }
+            );
+
+            if (response) {
+                // console.log(JSON.stringify(response));
+                console.log(response[0].messages[0].message.value);
+
+                handleMessage(response[0].messages[0].message.value);
+                // Get the ID of the first (only) entry returned.
+                currentId = response[0].messages[0].id;
+                redisClient.xDel(process.env.NAMESPACE + '_' + process.env.QUEUE + '_message', currentId)
+            } else {
+                // Response is null, we have read everything that is
+                // in the stream right now...
+                console.log('No new stream entries.');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+}
+
 const client = new Client({
     authStrategy: process.env.WADIR ? new LocalAuth({dataPath: ".wwebjs_auth/" + process.env.WADIR}) : new LocalAuth(),
     puppeteer: Config.puppeteer
@@ -30,6 +87,10 @@ const wss = new WebSocket.Server({
 client.on('qr', (qr) => {
     // NOTE: This event will not be fired if a session is specified.
     console.log('QR RECEIVED', qr);
+    if (redisClient.isOpen) {
+        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'qr', 'value': qr});
+        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 10)
+    }
     var obj = new Object();
     obj.type = "qr";
     obj.qr = qr;
@@ -55,12 +116,21 @@ client.on('authenticated', (session) => {
 
 client.on('auth_failure', msg => {
     // Fired if session restore was unsuccessfull
+    if (redisClient.isOpen) {
+        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
+        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+    }
     console.error('AUTHENTICATION FAILURE', msg);
 });
 
 client.on('ready', () => {
     console.log('READY');
     kurir = new Kurir(client)
+    start();
+    if (redisClient.isOpen) {
+        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'ready'});
+        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+    }
 });
 
 client.on('message', async msg => {
@@ -138,6 +208,10 @@ client.on('change_battery', (batteryInfo) => {
 });
 
 client.on('disconnected', (reason) => {
+    if (redisClient.isOpen) {
+        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
+        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+    }
     console.log('Client was logged out', reason);
 });
 
@@ -205,7 +279,5 @@ async function handleMessage(e) {
                 });
             }
         );
-
-
     }
 }
