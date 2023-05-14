@@ -54,7 +54,6 @@ const start = async function () {
 
             if (response) {
                 // console.log(JSON.stringify(response));
-                console.log(response[0].messages[0].message.value);
 
                 handleMessage(response[0].messages[0].message.value);
                 // Get the ID of the first (only) entry returned.
@@ -135,7 +134,6 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    console.log(msg);
     // if(kurir === undefined) return
     // if (msg.body.startsWith('/')) {
     //     // Send a new message to the same chat

@@ -12,8 +12,10 @@ services:
   wa-otp:
     image: registry.gitlab.com/kaspi-cabinet/cabin-backend/wa-image:kuber
     restart: on-failure
+    environment:
+      QUEUE: 'wa-otp'
     volumes:
-      - ./data/wa-otp:/usr/src/app/wa-broadcast/.wwebjs_auth/session
+      - ./data/wa-otp/session:/usr/src/app/wa-broadcast/.wwebjs_auth/session
     expose:
       - "8888"
 volumes:
