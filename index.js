@@ -43,7 +43,7 @@ const start = async function () {
         try {
             let response = await redisClient.xRead(
                 {
-                    key: process.env.NAMESPACE + '_' + process.env.QUEUE + '_message',
+                    key: process.env.QUEUE + '_message',
                     id: currentId
                 }, {
                     // Read 1 entry at a time, block for 5 seconds if there are none.
@@ -59,7 +59,7 @@ const start = async function () {
                 handleMessage(response[0].messages[0].message.value);
                 // Get the ID of the first (only) entry returned.
                 currentId = response[0].messages[0].id;
-                redisClient.xDel(process.env.NAMESPACE + '_' + process.env.QUEUE + '_message', currentId)
+                redisClient.xDel(process.env.QUEUE + '_message', currentId)
             } else {
                 // Response is null, we have read everything that is
                 // in the stream right now...
@@ -88,8 +88,8 @@ client.on('qr', (qr) => {
     // NOTE: This event will not be fired if a session is specified.
     console.log('QR RECEIVED', qr);
     if (redisClient.isOpen) {
-        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'qr', 'value': qr});
-        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 10)
+        redisClient.xAdd(process.env.QUEUE, '*', {'type': 'qr', 'value': qr});
+        redisClient.expire(process.env.QUEUE, 10)
     }
     var obj = new Object();
     obj.type = "qr";
@@ -117,8 +117,8 @@ client.on('authenticated', (session) => {
 client.on('auth_failure', msg => {
     // Fired if session restore was unsuccessfull
     if (redisClient.isOpen) {
-        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
-        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+        redisClient.xAdd(process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
+        redisClient.expire(process.env.QUEUE, 600)
     }
     console.error('AUTHENTICATION FAILURE', msg);
 });
@@ -128,8 +128,8 @@ client.on('ready', () => {
     kurir = new Kurir(client)
     start();
     if (redisClient.isOpen) {
-        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'ready'});
-        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+        redisClient.xAdd(process.env.QUEUE, '*', {'type': 'auth', 'status': 'ready'});
+        redisClient.expire(process.env.QUEUE, 600)
     }
 });
 
@@ -209,8 +209,8 @@ client.on('change_battery', (batteryInfo) => {
 
 client.on('disconnected', (reason) => {
     if (redisClient.isOpen) {
-        redisClient.xAdd(process.env.NAMESPACE + '_' + process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
-        redisClient.expire(process.env.NAMESPACE + '_' + process.env.QUEUE, 600)
+        redisClient.xAdd(process.env.QUEUE, '*', {'type': 'auth', 'status': 'disconnected'});
+        redisClient.expire(process.env.QUEUE, 600)
     }
     console.log('Client was logged out', reason);
 });
