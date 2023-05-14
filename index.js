@@ -60,10 +60,11 @@ const start = async function () {
                 // Get the ID of the first (only) entry returned.
                 currentId = response[0].messages[0].id;
                 redisClient.xDel(process.env.QUEUE + '_message', currentId)
+                setTimeout(function() {
+                }, 1000);
             } else {
                 // Response is null, we have read everything that is
                 // in the stream right now...
-                console.log('No new stream entries.');
             }
         } catch (err) {
             console.error(err);
