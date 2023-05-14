@@ -18,7 +18,7 @@ let filePath
 const redis = require("redis");
 let redisNotReady = true;
 let redisClient = redis.createClient({
-    host: 'redis',
+    url: 'redis://redis:6379',
     // host: '127.0.0.1',
     port: 6379
 });

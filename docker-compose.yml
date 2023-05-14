@@ -9,5 +9,12 @@ services:
       - type: volume
         source: typi-ultra-redis-data
         target: /data
+  wa-otp:
+    image: registry.gitlab.com/kaspi-cabinet/cabin-backend/wa-image:kuber
+    restart: on-failure
+    volumes:
+      - ./data/wa-otp:/usr/src/app/wa-broadcast/.wwebjs_auth/session
+    expose:
+      - "8888"
 volumes:
   typi-ultra-redis-data:
