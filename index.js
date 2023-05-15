@@ -53,14 +53,15 @@ const start = async function () {
             );
 
             if (response) {
-                // console.log(JSON.stringify(response));
-
-                handleMessage(response[0].messages[0].message.value);
-                // Get the ID of the first (only) entry returned.
-                currentId = response[0].messages[0].id;
-                redisClient.xDel(process.env.QUEUE + '_message', currentId)
-                setTimeout(function() {
-                }, 1000);
+                if (redisClient.isOpen && redisClient.isReady) {
+                    // console.log(JSON.stringify(response));
+                    handleMessage(response[0].messages[0].message.value);
+                    // Get the ID of the first (only) entry returned.
+                    currentId = response[0].messages[0].id;
+                    redisClient.xDel(process.env.QUEUE + '_message', currentId)
+                    setTimeout(function () {
+                    }, 1000);
+                }
             } else {
                 // Response is null, we have read everything that is
                 // in the stream right now...
