@@ -14,7 +14,7 @@
     "redis": "^4.6.6",
     "node-fetch": "^2.6.1",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "pedroslopez/whatsapp-web.js#main"
+    "whatsapp-web.js": "FanskiY/whatsapp-web.js#main"
   },
   "keywords": [],
   "author": "ahmad afandi",
