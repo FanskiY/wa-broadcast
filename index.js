@@ -38,7 +38,8 @@ redisClient.on("ready", (err) => {
 redisClient.connect();
 
 const start = async function () {
-    let currentId = '0-0';
+    var id = Math.floor(+new Date())-6*60*60*1000;
+    let currentId = id + '-0';
     while (true) {
         try {
             let response = await redisClient.xRead(

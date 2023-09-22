@@ -75,3 +75,4 @@ ws_client_php/vendor
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/vcs.xml
 /.idea/wa-broadcast.iml
+/data/*
