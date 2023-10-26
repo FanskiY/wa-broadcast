@@ -68,6 +68,7 @@ const start = async function () {
                 // in the stream right now...
             }
         } catch (err) {
+            redisClient.xDel(process.env.QUEUE + '_message', currentId)
             console.error(err);
         }
     }
