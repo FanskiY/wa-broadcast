@@ -38,7 +38,7 @@ redisClient.on("ready", (err) => {
 redisClient.connect();
 
 const start = async function () {
-    var id = Math.floor(+new Date())-6*60*60*1000;
+    var id = Math.floor(+new Date()) - 6 * 60 * 60 * 1000;
     let currentId = id + '-0';
     while (true) {
         try {
@@ -64,7 +64,7 @@ const start = async function () {
                     }
                     // Get the ID of the first (only) entry returned.
                     currentId = response[0].messages[0].id;
-                    redisClient.xDel(process.env.QUEUE + '_message', currentId)
+                    redisClient.xDel(process.env.QUEUE + '_message', currentId);
                     setTimeout(function () {
                     }, 1000);
                 }
@@ -73,6 +73,7 @@ const start = async function () {
                 // in the stream right now...
             }
         } catch (err) {
+            redisClient.xDel(process.env.QUEUE + '_message', currentId);
             console.error(err);
         }
     }
