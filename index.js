@@ -56,7 +56,12 @@ const start = async function () {
             if (response) {
                 if (redisClient.isOpen && redisClient.isReady) {
                     // console.log(JSON.stringify(response));
-                    handleMessage(response[0].messages[0].message.value);
+                    try {
+                        handleMessage(response[0].messages[0].message.value);
+                    } catch (err) {
+                        console.log(response[0]);
+                        console.error(err);
+                    }
                     // Get the ID of the first (only) entry returned.
                     currentId = response[0].messages[0].id;
                     redisClient.xDel(process.env.QUEUE + '_message', currentId)
@@ -68,8 +73,6 @@ const start = async function () {
                 // in the stream right now...
             }
         } catch (err) {
-            console.log(response[0]);
-            redisClient.xDel(process.env.QUEUE + '_message', currentId)
             console.error(err);
         }
     }
