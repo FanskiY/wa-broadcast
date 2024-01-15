@@ -282,5 +282,11 @@ async function handleMessage(e) {
                 });
             }
         );
+    } else if (obj.type === 'sendWaMedia') {
+        let numbers = obj.data
+        for (i in numbers) {
+            const media = await MessageMedia.fromUrl(numbers[i].url);
+            await client.sendMessage(numbers[i].to, media, {caption: numbers[i].message})
+        }
     }
 }
